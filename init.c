@@ -20,7 +20,7 @@ main(void)
   dup(0);  // stderr
 
   for(;;){
-    printf(1, "init: starting sh\nGroup #3:\n1. Mohammad Reza Sheshpari\n2. Mohammad Pooya Afhsari\n3. Mahdi Erfani\n");
+    printf(1, "init: starting sh\nGoup #3:\n1. Mohammad Reza Sheshpari\n2. Mohammad Pooya Afhsari\n3. Mahdi Erfani\n");
     pid = fork();
     if(pid < 0){
       printf(1, "init: fork failed\n");
