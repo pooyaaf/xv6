@@ -126,7 +126,18 @@ panic(char *s)
 //PAGEBREAK: 50
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
+#define LEFT_ARROW 0xE4
+#define RIGHT_ARROW 0xE5
+int back_counter = 0;
+int backspaces = 0;
 static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+#define INPUT_BUF 128
+struct {
+  char buf[INPUT_BUF];
+  uint r;  // Read index
+  uint w;  // Write index
+  uint e;  // Edit index
+} input;
 
 static void
 cgaputc(int c)
@@ -143,8 +154,22 @@ cgaputc(int c)
     pos += 80 - pos%80;
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
-  } else
+  } else if (c == LEFT_ARROW) {
+    if(back_counter < (strlen(input.buf) - backspaces)) {
+      --pos;
+      back_counter++;
+    }
+  } else if (c == RIGHT_ARROW) {
+    if(back_counter > 0) {
+      ++pos;
+      back_counter--;
+    }
+  } else {
+    for(int i = pos + back_counter; i >= pos; i--){
+      crt[i+1] = crt[i];
+    }
     crt[pos++] = (c&0xff) | 0x0700;  // black on white
+  }
 
   if(pos < 0 || pos > 25*80)
     panic("pos under/overflow");
@@ -159,7 +184,8 @@ cgaputc(int c)
   outb(CRTPORT+1, pos>>8);
   outb(CRTPORT, 15);
   outb(CRTPORT+1, pos);
-  crt[pos] = ' ' | 0x0700;
+  if(c != LEFT_ARROW && c != RIGHT_ARROW)
+    crt[pos+back_counter] = ' ' | 0x0700;
 }
 
 void
@@ -172,19 +198,12 @@ consputc(int c)
   }
 
   if(c == BACKSPACE){
+    backspaces++;
     uartputc('\b'); uartputc(' '); uartputc('\b');
   } else
     uartputc(c);
   cgaputc(c);
 }
-
-#define INPUT_BUF 128
-struct {
-  char buf[INPUT_BUF];
-  uint r;  // Read index
-  uint w;  // Write index
-  uint e;  // Edit index
-} input;
 
 #define C(x)  ((x)-'@')  // Control-x
 
@@ -208,16 +227,16 @@ consoleintr(int (*getc)(void))
       }
       break;
     case C('H'): case '\x7f':  // Backspace
-      if(input.e != input.w){
+      if(input.e != input.w && back_counter < (strlen(input.buf) - backspaces)){
         input.e--;
         consputc(BACKSPACE);
       }
       break;
-    case 0xE4:
-        input.e--;
+    case LEFT_ARROW:
+      cgaputc(c);
       break;
-    case 0xE5:
-        input.e++;
+    case RIGHT_ARROW:
+      cgaputc(c);
       break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
