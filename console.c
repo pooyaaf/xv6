@@ -15,6 +15,8 @@
 #include "proc.h"
 #include "x86.h"
 
+
+
 static void consputc(int);
 
 static int panicked = 0;
@@ -128,10 +130,25 @@ panic(char *s)
 #define CRTPORT 0x3d4
 #define LEFT_ARROW 0xE4
 #define RIGHT_ARROW 0xE5
+#define UP_ARROW 0xE2
+
+#define INPUT_BUF 128
+
+int count_entered = 0;
+
+void for_str(char a[count_entered+1],char b[count_entered+1]){
+  for(int i=0;i<count_entered/4+1;i++){
+    b[i]=a[i];
+  }
+}
 int back_counter = 0;
 int backspaces = 0;
+char history[10][INPUT_BUF];
+int curr_index=0 ;
+
+
 static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
-#define INPUT_BUF 128
+
 struct {
   char buf[INPUT_BUF];
   uint r;  // Read index
@@ -150,8 +167,14 @@ cgaputc(int c)
   outb(CRTPORT, 15);
   pos |= inb(CRTPORT+1);
 
-  if(c == '\n')
+  if(c == '\n'){
+    count_entered++;
+    for(int i = 0 ; i < 9 ; i++){
+      for_str(history[i],history[i+1]);
+    }
+    for_str(input.buf,history[0]);
     pos += 80 - pos%80;
+  }
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
   } else if (c == LEFT_ARROW) {
@@ -164,7 +187,7 @@ cgaputc(int c)
       ++pos;
       back_counter--;
     }
-  } else {
+  }else {
     for(int i = pos + back_counter; i >= pos; i--){
       crt[i+1] = crt[i];
     }
@@ -237,6 +260,15 @@ consoleintr(int (*getc)(void))
       break;
     case RIGHT_ARROW:
       cgaputc(c);
+      break;
+    case UP_ARROW:
+      char x;
+      for(int i=0; i < strlen(history[curr_index]); i++){
+          x = history[curr_index][i];
+          consputc(x);
+          input.buf[input.e++] = x;
+        }
+        curr_index --;
       break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
