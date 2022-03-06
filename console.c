@@ -136,11 +136,12 @@ panic(char *s)
 
 int count_entered = 0;
 
-void for_str(char a[count_entered+1],char b[count_entered+1]){
-  for(int i=0;i<count_entered/4+1;i++){
+void for_str(char a[],char b[],int size){
+  for(int i=0;i<127;i++){
     b[i]=a[i];
   }
 }
+
 int back_counter = 0;
 int backspaces = 0;
 char history[10][INPUT_BUF];
@@ -168,11 +169,8 @@ cgaputc(int c)
   pos |= inb(CRTPORT+1);
 
   if(c == '\n'){
-    count_entered++;
-    for(int i = 0 ; i < 9 ; i++){
-      for_str(history[i],history[i+1]);
-    }
-    for_str(input.buf,history[0]);
+   // count_entered++;
+    
     pos += 80 - pos%80;
   }
   else if(c == BACKSPACE){
@@ -263,10 +261,10 @@ consoleintr(int (*getc)(void))
       break;
     case UP_ARROW:
       char x;
-      for(int i=0; i < strlen(history[curr_index]); i++){
+      for(int i=0; i < strlen(history[curr_index])-1; i++){
           x = history[curr_index][i];
           consputc(x);
-          input.buf[input.e++] = x;
+          
         }
         curr_index --;
       break;
@@ -276,6 +274,10 @@ consoleintr(int (*getc)(void))
         input.buf[input.e++ % INPUT_BUF] = c;
         consputc(c);
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
+          for(int i = 0 ; i < 9 ; i++){
+            for_str(history[i],history[i+1],strlen(history[i]));
+           }
+            for_str(input.buf,history[0],strlen(history[0]));
           input.w = input.e;
           wakeup(&input.r);
         }
