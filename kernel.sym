@@ -266,6 +266,7 @@
 80106bb7 vector180
 801159e4 kpgdir
 80106d07 vector208
+80100b20 insertChar
 80103180 cmostime
 801064c0 uartintr
 80106839 vector98
@@ -287,8 +288,8 @@
 80104cf0 release
 80105080 fetchstr
 8010688a vector107
+80100bf0 forwardCursor
 8010662f vector40
-80100b20 vga_insert_char
 80104670 wait
 8010685d vector102
 8010a000 entrypgdir
@@ -366,9 +367,9 @@
 80106aeb vector163
 80106e3f vector234
 801036f0 log_write
-80100bf0 vga_move_forward_cursor
 80104a90 acquiresleep
 801057c0 sys_unlink
+80100c50 removeChar
 801066f5 vector62
 801065a8 vector25
 80106c8f vector198
@@ -422,7 +423,6 @@
 801069cb vector139
 80106a73 vector153
 80106af7 vector164
-80100c50 vga_remove_char
 80104990 procdump
 80106908 vector121
 80106460 uartputc

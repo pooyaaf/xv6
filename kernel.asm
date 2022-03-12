@@ -1319,8 +1319,8 @@ void for_str(char a[],char b[],int size){
 80100b1b:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
 80100b1f:	90                   	nop
 
-80100b20 <vga_insert_char>:
-void vga_insert_char(int c, int back_counter){
+80100b20 <insertChar>:
+void insertChar(int c, int back_counter){
 80100b20:	55                   	push   %ebp
   asm volatile("out %0,%1" : : "a" (data), "d" (port));
 80100b21:	b8 0e 00 00 00       	mov    $0xe,%eax
@@ -1352,7 +1352,7 @@ void vga_insert_char(int c, int back_counter){
   for(int i = pos + back_counter; i >= pos; i--){
 80100b53:	01 c2                	add    %eax,%edx
 80100b55:	39 d0                	cmp    %edx,%eax
-80100b57:	7f 25                	jg     80100b7e <vga_insert_char+0x5e>
+80100b57:	7f 25                	jg     80100b7e <insertChar+0x5e>
 80100b59:	8d 94 12 00 80 0b 80 	lea    -0x7ff48000(%edx,%edx,1),%edx
 80100b60:	8d 9c 00 fe 7f 0b 80 	lea    -0x7ff48002(%eax,%eax,1),%ebx
 80100b67:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
@@ -1365,7 +1365,7 @@ void vga_insert_char(int c, int back_counter){
 80100b76:	66 89 4a 04          	mov    %cx,0x4(%edx)
   for(int i = pos + back_counter; i >= pos; i--){
 80100b7a:	39 d3                	cmp    %edx,%ebx
-80100b7c:	75 f2                	jne    80100b70 <vga_insert_char+0x50>
+80100b7c:	75 f2                	jne    80100b70 <insertChar+0x50>
   crt[pos] = (c&0xff) | 0x0700;  
 80100b7e:	0f b6 55 08          	movzbl 0x8(%ebp),%edx
   asm volatile("out %0,%1" : : "a" (data), "d" (port));
@@ -1421,8 +1421,8 @@ if(command[0]!='\0')
 80100be6:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
 80100bed:	8d 76 00             	lea    0x0(%esi),%esi
 
-80100bf0 <vga_move_forward_cursor>:
-void vga_move_forward_cursor(){
+80100bf0 <forwardCursor>:
+void forwardCursor(){
 80100bf0:	55                   	push   %ebp
 80100bf1:	b8 0e 00 00 00       	mov    $0xe,%eax
 80100bf6:	89 e5                	mov    %esp,%ebp
@@ -1477,8 +1477,8 @@ void vga_move_forward_cursor(){
 80100c47:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
 80100c4e:	66 90                	xchg   %ax,%ax
 
-80100c50 <vga_remove_char>:
-void vga_remove_char(){
+80100c50 <removeChar>:
+void removeChar(){
 80100c50:	55                   	push   %ebp
 80100c51:	b8 0e 00 00 00       	mov    $0xe,%eax
 80100c56:	89 e5                	mov    %esp,%ebp
@@ -1689,8 +1689,8 @@ void vga_remove_char(){
           input.e--;
 80100e40:	83 ef 01             	sub    $0x1,%edi
 80100e43:	89 3d 08 ff 10 80    	mov    %edi,0x8010ff08
-          vga_remove_char();
-80100e49:	e8 02 fe ff ff       	call   80100c50 <vga_remove_char>
+          removeChar();
+80100e49:	e8 02 fe ff ff       	call   80100c50 <removeChar>
         while(input.e > input.w){
 80100e4e:	8b 3d 08 ff 10 80    	mov    0x8010ff08,%edi
 80100e54:	3b 3d 04 ff 10 80    	cmp    0x8010ff04,%edi
@@ -1919,7 +1919,7 @@ void vga_remove_char(){
             input.buf[input.pos % INPUT_BUF] = c;
 801010f5:	0f b6 85 5c ff ff ff 	movzbl -0xa4(%ebp),%eax
 801010fc:	83 e6 7f             	and    $0x7f,%esi
-            vga_insert_char(c, back_counter);
+            insertChar(c, back_counter);
 801010ff:	83 ec 08             	sub    $0x8,%esp
 80101102:	ff b5 58 ff ff ff    	push   -0xa8(%ebp)
 80101108:	53                   	push   %ebx
@@ -1931,8 +1931,8 @@ void vga_remove_char(){
             input.pos++;
 8010111a:	8b 85 54 ff ff ff    	mov    -0xac(%ebp),%eax
 80101120:	a3 0c ff 10 80       	mov    %eax,0x8010ff0c
-            vga_insert_char(c, back_counter);
-80101125:	e8 f6 f9 ff ff       	call   80100b20 <vga_insert_char>
+            insertChar(c, back_counter);
+80101125:	e8 f6 f9 ff ff       	call   80100b20 <insertChar>
 8010112a:	83 c4 10             	add    $0x10,%esp
 8010112d:	e9 b1 fb ff ff       	jmp    80100ce3 <consoleintr+0x23>
 80101132:	8d 42 01             	lea    0x1(%edx),%eax

@@ -133,23 +133,23 @@ panic(char *s)
 #define UP_ARROW 0xE2
 
 #define INPUT_BUF 128
-//
+// 
 int count_entered = 0;
-int commandHistoryCounter = 0;
+int commandHisCounter = 0;
 //
 void for_str(char a[],char b[],int size){
   for(int i=0;i<127;i++){
     b[i]=a[i];
   }
 }
-
+//
 int back_counter = 0;
 int backspaces = 0;
 char history[10][INPUT_BUF];
 int curr_index=0 ;
 
 
-static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+static ushort *crt = (ushort*)P2V(0xb8000);  
 
 struct {
   char buf[INPUT_BUF];
@@ -159,7 +159,7 @@ struct {
   uint pos;
 } input;
 ///
-void vga_insert_char(int c, int back_counter){
+void insertChar(int c, int back_counter){
   int pos;
 
   // get cursor position
@@ -190,8 +190,8 @@ if(command[0]!='\0')
     int length = strlen(command) <= INPUT_BUF ? strlen(command) : INPUT_BUF-1;
     int i;
 
-    if(commandHistoryCounter < 10){
-      commandHistoryCounter++;
+    if(commandHisCounter < 10){
+      commandHisCounter++;
     }else{
     // move back
       for(i = 0; i < 10 ; i++){
@@ -200,46 +200,46 @@ if(command[0]!='\0')
     }
 
   //store
-    memmove(history[commandHistoryCounter-1], command, sizeof(char)* length);
-    history[commandHistoryCounter-1][length] = '\0';
+    memmove(history[commandHisCounter-1], command, sizeof(char)* length);
+    history[commandHisCounter-1][length] = '\0';
 
-    curr_index = commandHistoryCounter - 1;
+    curr_index = commandHisCounter - 1;
   }
 }
 ///
-void vga_move_forward_cursor(){
+void forwardCursor(){
   int pos;
   
-  // get cursor position
+  // cursor pos
   outb(CRTPORT, 14);                  
   pos = inb(CRTPORT+1) << 8;
   outb(CRTPORT, 15);
   pos |= inb(CRTPORT+1);    
 
-  // move back
+ 
   pos++;
 
-  // reset cursor
+  // cursor reset
   outb(CRTPORT, 15);
   outb(CRTPORT+1, (unsigned char)(pos&0xFF));
   outb(CRTPORT, 14);
   outb(CRTPORT+1, (unsigned char )((pos>>8)&0xFF));
-  //crt[pos] = ' ' | 0x0700;
+
 }
-/*delete one character from vga*/
-void vga_remove_char(){
+
+void removeChar(){
   int pos;
   
-  // get cursor position
+  // cursor pos
+
   outb(CRTPORT, 14);                  
   pos = inb(CRTPORT+1) << 8;
   outb(CRTPORT, 15);
   pos |= inb(CRTPORT+1);    
-
-  // move back
+ 
   pos--;
 
-  // reset cursor
+    // cursor reset
   outb(CRTPORT, 15);
   outb(CRTPORT+1, (unsigned char)(pos&0xFF));
   outb(CRTPORT, 14);
@@ -345,26 +345,27 @@ consoleintr(int (*getc)(void))
         consputc(BACKSPACE);
       }
       break;
-    case LEFT_ARROW:
+    case LEFT_ARROW: // Left move cursor
       cgaputc(c);
       break;
-    case RIGHT_ARROW:
+    case RIGHT_ARROW:      // Right move cursor
       cgaputc(c);
       break;
-    case UP_ARROW:                // last command in history
+    case UP_ARROW:                // Last command in history
       if(curr_index >= 0){
-        //move cursor to most right position
+        //move to the right most pos 
         for(int i=input.pos; i < input.e; i++){
-          vga_move_forward_cursor();
+          forwardCursor();
         }
+      
 
-        //clear current input
+        //clear input
         while(input.e > input.w){
           input.e--;
-          vga_remove_char();
+          removeChar();
         }
 
-        //show last command
+        //load last command
         for(int i=0; i < strlen(history[curr_index]); i++){
           x = history[curr_index][i];
           consputc(x);
@@ -428,8 +429,7 @@ default:
             input.e++;
             input.pos++;
 
-            //insert the char into CRT propoly position
-            vga_insert_char(c, back_counter);
+            insertChar(c, back_counter);
           }
         }
       }
@@ -438,7 +438,7 @@ default:
   }
   release(&cons.lock);
   if(doprocdump) {
-    procdump();  // now call procdump() wo. cons.lock held
+    procdump();  
   }
 }
 
